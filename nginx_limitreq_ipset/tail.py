@@ -10,13 +10,15 @@ logger = logging.getLogger(__name__)
 def errlog(pipe):
     with pipe:
         for line in iter(pipe.readline, b""):
-            logger.info("got stderr", extra={"stderr": line})
+            s = line.decode("utf-8").strip()
+            logger.info("got stderr", extra={"stderr": s})
 
 
 def reader(pipe, q):
     with pipe:
         for line in iter(pipe.readline, b""):
-            q.put(line)
+            s = line.decode("utf-8").strip()
+            q.put(s)
 
 
 # Retry this function indefinitely by always returning True for the predicate.
