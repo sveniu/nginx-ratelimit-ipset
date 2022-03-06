@@ -4,6 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["Sven Ulland <sven.ulland@gmail.com>"]
 
+[tool.poetry.scripts]
+nginx-limitreq-ipset = "nginx_limitreq_ipset.cli:cli"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 
