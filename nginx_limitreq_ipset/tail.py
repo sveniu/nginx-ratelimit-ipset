@@ -1,13 +1,16 @@
+import logging
 import subprocess
 import threading
 
 import backoff
 
+logger = logging.getLogger(__name__)
+
 
 def errlog(pipe):
     with pipe:
         for line in iter(pipe.readline, b""):
-            print("stderr log:", line.strip())
+            logger.info("got stderr", extra={"stderr": line})
 
 
 def reader(pipe, q):
@@ -24,8 +27,9 @@ def tail(fn, q):
     """
     Tail the specified file using tail(1). Write stdout lines to a queue.
     """
+    cmd = ["tail", "-n", "0", "-F", fn]
     p = subprocess.Popen(
-        ["tail", "-n", "0", "-F", fn],
+        cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -37,8 +41,8 @@ def tail(fn, q):
     [t.start() for t in threads]
     [t.join() for t in threads]
 
-    # FIXME log process returncode
     rc = p.wait()
+    logger.warn("unexpected subprocess exit", extra={"command": cmd, "returncode": rc})
     return rc
 
 

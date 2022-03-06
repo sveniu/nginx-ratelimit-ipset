@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 def add_to_ipset(q):
     for item in iter(q.get, None):
-        print("add_to_ipset got item:", item)
+        logger.info("got item", extra={"item": item})
