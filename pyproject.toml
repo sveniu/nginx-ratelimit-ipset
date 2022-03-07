@@ -9,7 +9,6 @@ nginx-limitreq-ipset = "nginx_limitreq_ipset.cli:cli"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-backoff = "^1.11.1"
 python-json-logger = "^2.0.2"
 
 [tool.poetry.dev-dependencies]

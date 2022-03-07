@@ -1,9 +1,8 @@
 import logging
 import subprocess
 import threading
+import time
 from enum import Enum
-
-import backoff
 
 from . import nginx
 
@@ -30,10 +29,6 @@ def reader(pipe, stream_type, q=None):
                 logger.info("read from stderr", extra={"stderr": s})
 
 
-# Retry this function indefinitely by always returning True for the predicate.
-# This will restart the tail process if it fails for any reason, using an
-# expotential backoff with a maximum interval.
-@backoff.on_predicate(backoff.expo, lambda x: True, max_time=30.0)
 def tail(fn, q):
     """
     Tail the specified file using tail(1). Write stdout lines to a queue.
@@ -54,9 +49,7 @@ def tail(fn, q):
     [t.start() for t in threads]
     [t.join() for t in threads]
 
-    rc = p.wait()
-    logger.warn("unexpected subprocess exit", extra={"command": cmd, "returncode": rc})
-    return rc
+    return p.wait()
 
 
 def tail_forever(fn, q):
@@ -64,4 +57,7 @@ def tail_forever(fn, q):
     Tail the specified file using tail(1). Write stdout lines to a queue. Retry
     on failure.
     """
-    tail(fn, q)
+    while True:
+        rc = tail(fn, q)
+        logger.warn("unexpected subprocess exit", extra={"returncode": rc})
+        time.sleep(2.0)
