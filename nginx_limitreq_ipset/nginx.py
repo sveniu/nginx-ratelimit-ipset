@@ -12,6 +12,11 @@ class UnhandledEventException(Exception):
 
 
 def parse_limit_req(s):
+    """
+    Parse a line from ngx_http_limit_req_module, and return a dictionary with
+    the parsed values.
+    """
+
     m = re.match(r".*\b(?P<action>limiting|delaying) requests\b", s)
     if not m:
         raise UnhandledEventException("not a limit_req event")

@@ -9,8 +9,12 @@ from pythonjsonlogger import jsonlogger
 from . import ipset, tail
 
 
-# https://github.com/madzak/python-json-logger#customizing-fields
 class CustomJsonFormatter(jsonlogger.JsonFormatter):
+    """
+    Custom formatter for python-json-logger. Lifted straight from
+    https://github.com/madzak/python-json-logger#customizing-fields
+    """
+
     def add_fields(self, log_record, record, message_dict):
         super(CustomJsonFormatter, self).add_fields(log_record, record, message_dict)
         if not log_record.get("timestamp"):

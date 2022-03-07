@@ -11,6 +11,11 @@ ipset_comment = "my-test-comment"
 
 
 def add_to_ipset(q):
+    """
+    Fetch items (parsed ngx_http_limit_req_module events) from the given queue.
+    Use ipset to add the items to an IP set.
+    """
+
     for item in iter(q.get, None):
         logger.debug("got item", extra={"item": item})
 
@@ -50,7 +55,7 @@ def add_to_ipset(q):
 
         if p.returncode != 0:
             logger.error(
-                "subprocess failed",
+                "subprocess returned non-zero exit code",
                 extra={
                     "argv": cmd,
                     "rc": p.returncode,

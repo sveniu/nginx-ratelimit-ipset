@@ -16,6 +16,11 @@ class StdStreamType(Enum):
 
 
 def reader(pipe, stream_type, q=None):
+    """
+    Read lines from the given pipe (io.BufferedReader). Handle lines according
+    to the stream type (stdout vs stderr).
+    """
+
     with pipe:
         for line in iter(pipe.readline, b""):
             s = line.decode("utf-8").strip()
@@ -33,7 +38,11 @@ def reader(pipe, stream_type, q=None):
 def tail(fn, q):
     """
     Tail the specified file using tail(1). Write stdout lines to a queue.
+
+    Execute the system tail(1); don't output any lines on startup; follow files
+    through renames.
     """
+
     cmd = ["/usr/bin/tail", "-n", "0", "-F", fn]
     p = subprocess.Popen(
         cmd,
