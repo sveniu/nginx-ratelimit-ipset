@@ -25,6 +25,17 @@ class IPSetManager:
                 logger.debug("limit_req dry run; no action")
                 continue
 
+            realm = nginx.LimitReqRealm[self.config["limit_req_realm"]]
+            if not item["realm"] is realm:
+                logger.debug(
+                    "limit_req realm mismatch",
+                    extra={
+                        "wanted": realm,
+                        "got": item["realm"],
+                    },
+                )
+                continue
+
             action = nginx.LimitReqAction[self.config["limit_req_action"]]
             if not item["action"] is action:
                 logger.debug(
