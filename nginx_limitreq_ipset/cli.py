@@ -10,6 +10,8 @@ from pythonjsonlogger import jsonlogger
 
 from . import ipset, tail
 
+logger = logging.getLogger()
+
 config_file_paths = (
     "./config.yml",
     "~/.config/nginx-limitreq-ipset/config.yml",
@@ -35,7 +37,6 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
 
 
 def main():
-    logger = logging.getLogger()
     logHandler = logging.StreamHandler()
     formatter = CustomJsonFormatter("%(timestamp)s %(name)s %(level)s %(message)s")
     logHandler.setFormatter(formatter)
@@ -53,12 +54,14 @@ def main():
 
     if config is None:
         logger.error(
-            "no config found; exiting",
+            "no config file found",
             extra={
                 "attempted_paths": config_file_paths,
             },
         )
-        sys.exit(1)
+        raise RuntimeError(
+            f"no config file found; tried: {'; '.join(config_file_paths)}"
+        )
 
     # Update log level from config.
     logger.setLevel(config.get("log_level", logging.INFO))
@@ -83,10 +86,14 @@ def main():
         # Wait for all threads to complete.
         [t.join() for t in threads]
     except KeyboardInterrupt:
-        logger.warn("got keyboard interrupt; exiting")
         q.put(None)
         [t.join(0.2) for t in threads]
+        raise RuntimeError("keyboard interrupt")
 
 
 def cli():
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.error("unhandled exception; exiting", extra={"exception": e})
+        sys.exit(1)
