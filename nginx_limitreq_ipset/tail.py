@@ -1,24 +1,29 @@
 import logging
 import subprocess
 import threading
+from enum import Enum
 
 import backoff
 
 logger = logging.getLogger(__name__)
 
 
-def errlog(pipe):
+class StdStreamType(Enum):
+    STDOUT = 1
+    STDERR = 2
+
+
+def reader(pipe, stds, q=None):
     with pipe:
         for line in iter(pipe.readline, b""):
             s = line.decode("utf-8").strip()
-            logger.info("got stderr", extra={"stderr": s})
 
+            if stds is StdStreamType.STDOUT:
+                if q is not None:
+                    q.put(s)
 
-def reader(pipe, q):
-    with pipe:
-        for line in iter(pipe.readline, b""):
-            s = line.decode("utf-8").strip()
-            q.put(s)
+            if stds is StdStreamType.STDERR:
+                logger.info("read from stderr", extra={"stderr": s})
 
 
 # Retry this function indefinitely by always returning True for the predicate.
@@ -37,8 +42,8 @@ def tail(fn, q):
     )
 
     threads = [
-        threading.Thread(target=reader, args=(p.stdout, q)),
-        threading.Thread(target=errlog, args=(p.stderr,)),
+        threading.Thread(target=reader, args=(p.stdout, StdStreamType.STDOUT, q)),
+        threading.Thread(target=reader, args=(p.stderr, StdStreamType.STDERR)),
     ]
     [t.start() for t in threads]
     [t.join() for t in threads]
