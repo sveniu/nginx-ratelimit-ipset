@@ -83,6 +83,13 @@ class IPSetManager:
 
             try:
                 exec.execute(cmd)
+                logger.info(
+                    "ipset entry added",
+                    extra={
+                        "item": item,
+                        "argv": cmd,
+                    },
+                )
             except exec.NonZeroExitException:
                 pass
 
