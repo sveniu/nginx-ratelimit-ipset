@@ -1,4 +1,5 @@
 import logging
+import re
 import subprocess
 import threading
 from enum import Enum
@@ -13,16 +14,51 @@ class StdStreamType(Enum):
     STDERR = 2
 
 
-def reader(pipe, stds, q=None):
+class UnhandledEventException(Exception):
+    pass
+
+
+def parse_limit_req(s):
+    m = re.match(r".*\blimiting requests\b", s)
+    if not m:
+        raise UnhandledEventException("not a limit_req event")
+
+    m = re.match(r'.*\bzone "(?P<zone>[^"]+)"', s)
+    if not m:
+        raise UnhandledEventException("zone not parsed")
+
+    zone = m.group("zone")
+
+    m = re.match(r".*\bclient: (?P<addr>[^,]+),", s)
+    if not m:
+        raise UnhandledEventException("client addr not parsed")
+
+    addr = m.group("addr")
+
+    dry_run = False
+    m = re.match(r".*\bdry run\b", s)  # nginx 1.17.1 and later
+    if m:
+        dry_run = True
+
+    return {
+        "zone": zone,
+        "addr": addr,
+        "dry_run": dry_run,
+    }
+
+
+def reader(pipe, stream_type, q=None):
     with pipe:
         for line in iter(pipe.readline, b""):
             s = line.decode("utf-8").strip()
 
-            if stds is StdStreamType.STDOUT:
-                if q is not None:
-                    q.put(s)
+            if stream_type is StdStreamType.STDOUT:
+                try:
+                    q.put(parse_limit_req(s))
+                except UnhandledEventException as e:
+                    logger.debug("unhandled event", extra={"exception": e})
 
-            if stds is StdStreamType.STDERR:
+            if stream_type is StdStreamType.STDERR:
                 logger.info("read from stderr", extra={"stderr": s})
 
 
