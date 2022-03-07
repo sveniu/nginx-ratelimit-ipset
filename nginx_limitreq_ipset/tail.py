@@ -50,7 +50,7 @@ def tail(fn, q):
         stderr=subprocess.PIPE,
     )
 
-    logger.info("now tailing file", extra={"argv": cmd})
+    logger.info("tail process started", extra={"file_path": fn, "argv": cmd})
 
     threads = [
         threading.Thread(target=reader, args=(p.stdout, StdStreamType.STDOUT, q)),

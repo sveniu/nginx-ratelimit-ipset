@@ -1,65 +1,80 @@
 import logging
-import subprocess
+
+from . import exec, nginx
 
 logger = logging.getLogger(__name__)
 
 
-ipset_cmd = "/usr/sbin/ipset"
-ipset_set = "autoban"
-ipset_timeout = "121"
-ipset_comment = "my-test-comment"
+class IPSetManager:
+    ipset_cmd = "/usr/sbin/ipset"
+
+    def __init__(self, config):
+        self.config = config
+
+    def add_to_ipset(self, q):
+        """
+        Fetch items (parsed ngx_http_limit_req_module events) from the given queue.
+        Use ipset to add the items to an IP set.
+        """
+
+        for item in iter(q.get, None):
+            logger.debug("got item", extra={"item": item})
+
+            if item["dry_run"] and not self.config["limit_req_add_dry_run"]:
+                logger.debug("limit_req dry run; no action")
+                continue
+
+            action = nginx.LimitReqAction[self.config["limit_req_action"]]
+            if not item["action"] is action:
+                logger.debug(
+                    "limit_req action mismatch",
+                    extra={
+                        "wanted": action,
+                        "got": item["action"],
+                    },
+                )
+                continue
+
+            zone_name = self.config["limit_req_zone_name"]
+            if not item["zone"] == zone_name:
+                logger.debug(
+                    "limit_req zone mismatch",
+                    extra={
+                        "wanted": zone_name,
+                        "got": item["zone"],
+                    },
+                )
+                continue
+
+            cmd = [
+                IPSetManager.ipset_cmd,
+                "-exist",
+                "add",
+                self.config["ipset_name"],
+                item["addr"],
+            ]
+
+            if "ipset_entry_timeout" in self.config:
+                cmd.extend(
+                    [
+                        "timeout",
+                        self.config["ipset_entry_timeout_seconds"],
+                    ]
+                )
+
+            if "ipset_entry_comment" in self.config:
+                cmd.extend(
+                    [
+                        "comment",
+                        self.config["ipset_entry_comment"],
+                    ]
+                )
+
+            try:
+                exec.execute(cmd)
+            except exec.NonZeroExitException:
+                pass
 
 
-def add_to_ipset(q):
-    """
-    Fetch items (parsed ngx_http_limit_req_module events) from the given queue.
-    Use ipset to add the items to an IP set.
-    """
-
-    for item in iter(q.get, None):
-        logger.debug("got item", extra={"item": item})
-
-        cmd = [
-            ipset_cmd,
-            "-exist",
-            "add",
-            ipset_set,
-            item["addr"],
-            "timeout",
-            ipset_timeout,
-            "comment",
-            ipset_comment,
-        ]
-
-        try:
-            p = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-        except Exception as e:
-            logger.error(
-                "error starting subprocess",
-                extra={
-                    "argv": cmd,
-                    "exception": e,
-                },
-            )
-            continue
-
-        try:
-            stdout, stderr = p.communicate(timeout=2.0)
-        except subprocess.TimeoutExpired:
-            p.kill()
-            stdout, stderr = p.communicate()
-
-        if p.returncode != 0:
-            logger.error(
-                "subprocess returned non-zero exit code",
-                extra={
-                    "argv": cmd,
-                    "rc": p.returncode,
-                    "stdout": stdout.decode("utf-8").strip(),
-                    "stderr": stderr.decode("utf-8").strip(),
-                },
-            )
+# Raise exception early if list command fails.
+exec.execute([IPSetManager.ipset_cmd, "list"])

@@ -1,12 +1,20 @@
 import logging
+import os.path
 import queue
 import sys
 import threading
 from datetime import datetime
 
+import yaml
 from pythonjsonlogger import jsonlogger
 
 from . import ipset, tail
+
+config_file_paths = (
+    "./config.yml",
+    "~/.config/nginx-limitreq-ipset/config.yml",
+    "/etc/nginx-limitreq-ipset/config.yml",
+)
 
 
 class CustomJsonFormatter(jsonlogger.JsonFormatter):
@@ -34,16 +42,42 @@ def main():
     logger.addHandler(logHandler)
     logger.setLevel(logging.NOTSET)
 
-    q = queue.Queue(maxsize=100)  # FIXME more? no limit?
-    fn = sys.argv[1]
+    config = None
+    for fn in config_file_paths:
+        try:
+            with open(os.path.expanduser(fn), "r") as f:
+                config = yaml.load(f, yaml.SafeLoader)
+                break
+        except FileNotFoundError as e:
+            logger.warn("config file not found", extra={"path": fn, "exception": e})
 
-    threads = [
-        threading.Thread(target=ipset.add_to_ipset, args=(q,)),
-        threading.Thread(target=tail.tail_with_retry, args=(fn, q)),
-    ]
+    if config is None:
+        logger.error(
+            "no config found; exiting",
+            extra={
+                "attempted_paths": config_file_paths,
+            },
+        )
+        sys.exit(1)
+
+    threads = []
+    for cfg in config["zone_ipset_maps"]:
+        fn = cfg["log_file_path"]
+        q = queue.Queue(config.get("tail_stdout_queue_size", 1000))
+        ipset_manager = ipset.IPSetManager(cfg)
+
+        threads.extend(
+            [
+                threading.Thread(target=ipset_manager.add_to_ipset, args=(q,)),
+                threading.Thread(target=tail.tail_with_retry, args=(fn, q)),
+            ]
+        )
+
+    # Start all threads.
     [t.start() for t in threads]
 
     try:
+        # Wait for all threads to complete.
         [t.join() for t in threads]
     except KeyboardInterrupt:
         logger.warn("got keyboard interrupt; exiting")
