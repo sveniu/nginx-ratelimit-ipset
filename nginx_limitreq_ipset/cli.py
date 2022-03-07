@@ -37,12 +37,6 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
 
 
 def main():
-    logHandler = logging.StreamHandler()
-    formatter = CustomJsonFormatter("%(timestamp)s %(name)s %(level)s %(message)s")
-    logHandler.setFormatter(formatter)
-    logger.addHandler(logHandler)
-    logger.setLevel(logging.NOTSET)
-
     config = None
     for fn in config_file_paths:
         try:
@@ -92,6 +86,12 @@ def main():
 
 
 def cli():
+    logHandler = logging.StreamHandler()
+    formatter = CustomJsonFormatter("%(timestamp)s %(name)s %(level)s %(message)s")
+    logHandler.setFormatter(formatter)
+    logger.addHandler(logHandler)
+    logger.setLevel(logging.NOTSET)
+
     try:
         main()
     except Exception as e:
