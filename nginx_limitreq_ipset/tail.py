@@ -1,4 +1,5 @@
 import logging
+import signal
 import subprocess
 import threading
 import time
@@ -59,5 +60,8 @@ def tail_forever(fn, q):
     """
     while True:
         rc = tail(fn, q)
+        if rc == -1 * signal.SIGINT:
+            break
+
         logger.warn("unexpected subprocess exit", extra={"returncode": rc})
         time.sleep(2.0)
