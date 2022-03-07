@@ -34,12 +34,14 @@ def tail(fn, q):
     """
     Tail the specified file using tail(1). Write stdout lines to a queue.
     """
-    cmd = ["tail", "-n", "0", "-F", fn]
+    cmd = ["/usr/bin/tail", "-n", "0", "-F", fn]
     p = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
+
+    logger.info("now tailing file", extra={"argv": cmd})
 
     threads = [
         threading.Thread(target=reader, args=(p.stdout, StdStreamType.STDOUT, q)),
