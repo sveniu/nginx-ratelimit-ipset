@@ -55,11 +55,11 @@ class IPSetManager:
                 item["addr"],
             ]
 
-            if "ipset_entry_timeout" in self.config:
+            if "ipset_entry_timeout_seconds" in self.config:
                 cmd.extend(
                     [
                         "timeout",
-                        self.config["ipset_entry_timeout_seconds"],
+                        str(self.config["ipset_entry_timeout_seconds"]),
                     ]
                 )
 
