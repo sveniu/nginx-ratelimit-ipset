@@ -53,7 +53,7 @@ def tail(fn, q):
     return p.wait()
 
 
-def tail_forever(fn, q):
+def tail_with_retry(fn, q):
     """
     Tail the specified file using tail(1). Write stdout lines to a queue. Retry
     on failure.

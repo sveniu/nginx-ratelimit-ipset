@@ -35,7 +35,7 @@ def main():
 
     threads = [
         threading.Thread(target=ipset.add_to_ipset, args=(q,)),
-        threading.Thread(target=tail.tail_forever, args=(fn, q)),
+        threading.Thread(target=tail.tail_with_retry, args=(fn, q)),
     ]
     [t.start() for t in threads]
 
