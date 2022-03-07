@@ -71,6 +71,16 @@ class IPSetManager:
                     ]
                 )
 
+            if self.config.get("ipset_dry_run", False):
+                logger.info(
+                    "dry run; would have added entry",
+                    extra={
+                        "item": item,
+                        "argv": cmd,
+                    },
+                )
+                continue
+
             try:
                 exec.execute(cmd)
             except exec.NonZeroExitException:
