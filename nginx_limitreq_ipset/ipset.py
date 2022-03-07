@@ -20,6 +20,7 @@ class IPSetManager:
         for item in iter(q.get, None):
             logger.debug("got item", extra={"item": item})
 
+            # Check whether to add entry, even if logged as "dry run" by nginx.
             if item["dry_run"] and not self.config["limit_req_add_dry_run"]:
                 logger.debug("limit_req dry run; no action")
                 continue
