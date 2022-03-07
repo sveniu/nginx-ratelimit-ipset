@@ -60,6 +60,9 @@ def main():
         )
         sys.exit(1)
 
+    # Update log level from config.
+    logger.setLevel(config.get("log_level", logging.INFO))
+
     threads = []
     for cfg in config["zone_ipset_maps"]:
         fn = cfg["log_file_path"]
