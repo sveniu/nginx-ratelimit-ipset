@@ -38,7 +38,13 @@ def main():
         threading.Thread(target=tail.tail_forever, args=(fn, q)),
     ]
     [t.start() for t in threads]
-    [t.join() for t in threads]
+
+    try:
+        [t.join() for t in threads]
+    except KeyboardInterrupt:
+        logger.warn("got keyboard interrupt; exiting")
+        q.put(None)
+        [t.join(0.2) for t in threads]
 
 
 def cli():
