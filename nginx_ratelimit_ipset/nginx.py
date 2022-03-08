@@ -2,12 +2,12 @@ import re
 from enum import Enum
 
 
-class LimitReqRealm(Enum):
+class LimitType(Enum):
     REQUESTS = 1
     CONNECTIONS = 2
 
 
-class LimitReqAction(Enum):
+class LimitAction(Enum):
     LIMIT = 1
     DELAY = 2
 
@@ -16,31 +16,31 @@ class UnhandledEventException(Exception):
     pass
 
 
-def parse_limit_req(s):
+def parse_ratelimit_line(s):
     """
-    Parse a line from ngx_http_limit_req_module or ngx_http_limit_conn_module,
-    and return a dictionary with the parsed values.
+    Parse a line from ngx_http_limit_{req,conn}_module and return a dictionary
+    with the parsed values.
     """
 
     m = re.match(
-        r".*\b(?P<action>limiting|delaying) (?P<realm>requests|connections)\b", s
+        r".*\b(?P<action>limiting|delaying) (?P<type>requests|connections)\b", s
     )
     if not m:
-        raise UnhandledEventException("not a limit_req event")
+        raise UnhandledEventException("not a ratelimit log line")
 
-    realm_str = m.group("realm")
-    realm = None
-    if realm_str == "requests":
-        realm = LimitReqRealm.REQUESTS
-    elif realm_str == "delaying":
-        realm = LimitReqRealm.CONNECTIONS
+    rltype = None
+    rltype_str = m.group("type")
+    if rltype_str == "requests":
+        rltype = LimitType.REQUESTS
+    elif rltype_str == "delaying":
+        rltype = LimitType.CONNECTIONS
 
-    action_str = m.group("action")
     action = None
+    action_str = m.group("action")
     if action_str == "limiting":
-        action = LimitReqAction.LIMIT
+        action = LimitAction.LIMIT
     elif action_str == "delaying":
-        action = LimitReqAction.DELAY
+        action = LimitAction.DELAY
 
     m = re.match(r".*\bexcess: (?P<excess>[\d.]+)", s)
     if not m:
@@ -66,7 +66,7 @@ def parse_limit_req(s):
     addr = m.group("addr")
 
     return {
-        "realm": realm,
+        "type": rltype,
         "action": action,
         "excess": excess,
         "zone": zone,

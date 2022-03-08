@@ -1,9 +1,11 @@
-# Nginx limit_req client address to netfilter IP sets
+# Nginx rate-limited client address to netfilter IP sets
 
-Get offender IPs from Nginx limit_req logs and insert them into netfilter IP
-sets for further iptables processing.
+Get offender IPs from Nginx limit_conn or limit_req logs and insert them into
+netfilter IP sets for further iptables processing.
 
-Offload high-volume connection- or request-based
+Offload high-volume connection- or request-based (D)DoS attacks to iptables,
+instead of letting Nginx spend CPU cycles on them, especially if TLS is
+involved.
 
 ## Overview
 
@@ -38,17 +40,17 @@ http {
 }
 ```
 
-Put the following configuration into `/etc/nginx-limit-ipset/config.yml`:
+Put the following configuration into `/etc/nginx-ratelimit-ipset/config.yml`:
 
 ```yaml
 ---
 zone_ipset_maps:
   - log_file_path: /var/log/nginx/error.log
-    limit_req_zone_name: myzone
+    ratelimit_zone_name: myzone
     ipset_name: offenders
 ```
 
-Run the program with `nginx-limit-ipset` and it will log activity to stderr.
+Run the program with `nginx-ratelimit-ipset` and it will log activity to stderr.
 Observe IP addresses being immediately added to the IP set, just as they are
 logged by Nginx.
 
@@ -56,7 +58,7 @@ logged by Nginx.
 
 TBD.
 
-Realm: connections, requests
+Type: connections, requests
 Action: limit, delay
 Excess: .. ignored
 Dry run.

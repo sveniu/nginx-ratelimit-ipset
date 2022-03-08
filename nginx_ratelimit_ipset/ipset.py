@@ -13,30 +13,30 @@ class IPSetManager:
 
     def add_to_ipset(self, q):
         """
-        Fetch items (parsed ngx_http_limit_req_module events) from the given queue.
-        Use ipset to add the items to an IP set.
+        Fetch items (parsed ngx_http_limit_{req,conn}_module events) from the
+        given queue. Use ipset to add the items to an IP set.
         """
 
         for item in iter(q.get, None):
             logger.debug("got item", extra={"item": item})
 
             # Check whether to add entry, even if logged as "dry run" by nginx.
-            if item["dry_run"] and not self.config["limit_req_add_dry_run"]:
-                logger.debug("limit_req dry run; no action")
+            if item["dry_run"] and not self.config["ratelimit_add_dry_run"]:
+                logger.debug("dry run; no action")
                 continue
 
-            realm = nginx.LimitReqRealm[self.config["limit_req_realm"]]
-            if not item["realm"] is realm:
+            rltype = nginx.LimitType[self.config["ratelimit_type"]]
+            if not item["type"] is rltype:
                 logger.debug(
-                    "limit_req realm mismatch",
+                    "limit_req type mismatch",
                     extra={
-                        "wanted": realm,
-                        "got": item["realm"],
+                        "wanted": rltype,
+                        "got": item["type"],
                     },
                 )
                 continue
 
-            action = nginx.LimitReqAction[self.config["limit_req_action"]]
+            action = nginx.LimitAction[self.config["ratelimit_action"]]
             if not item["action"] is action:
                 logger.debug(
                     "limit_req action mismatch",
@@ -47,7 +47,7 @@ class IPSetManager:
                 )
                 continue
 
-            zone_name = self.config["limit_req_zone_name"]
+            zone_name = self.config["ratelimit_zone_name"]
             if not item["zone"] == zone_name:
                 logger.debug(
                     "limit_req zone mismatch",
@@ -95,7 +95,7 @@ class IPSetManager:
             try:
                 exec.execute(cmd)
                 logger.info(
-                    "ipset entry added",
+                    "ipset entry added successfully",
                     extra={
                         "item": item,
                         "argv": cmd,

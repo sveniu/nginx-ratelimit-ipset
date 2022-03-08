@@ -1,4 +1,4 @@
-from nginx_limit_ipset import __version__
+from nginx_ratelimit_ipset import __version__
 
 
 def test_version():

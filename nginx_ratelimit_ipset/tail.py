@@ -27,7 +27,7 @@ def reader(pipe, stream_type, q=None):
 
             if stream_type is StdStreamType.STDOUT:
                 try:
-                    q.put(nginx.parse_limit_req(s))
+                    q.put(nginx.parse_ratelimit_line(s))
                 except nginx.UnhandledEventException as e:
                     logger.debug("unhandled event", extra={"exception": e})
 

@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "nginx-limit-ipset"
+name = "nginx-ratelimit-ipset"
 version = "0.1.0"
 description = ""
 authors = ["Sven Ulland <sven.ulland@gmail.com>"]
 
 [tool.poetry.scripts]
-nginx-limit-ipset = "nginx_limit_ipset.cli:cli"
+nginx-ratelimit-ipset = "nginx_ratelimit_ipset.cli:cli"
 
 [tool.poetry.dependencies]
 python = "^3.10"
