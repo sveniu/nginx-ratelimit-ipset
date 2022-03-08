@@ -38,7 +38,7 @@ http {
 }
 ```
 
-Put the following configuration into `/etc/nginx-limitreq-ipset/config.yml`:
+Put the following configuration into `/etc/nginx-limit-ipset/config.yml`:
 
 ```yaml
 ---
@@ -48,7 +48,7 @@ zone_ipset_maps:
     ipset_name: offenders
 ```
 
-Run the program with `nginx-limitreq-ipset` and it will log activity to stderr.
+Run the program with `nginx-limit-ipset` and it will log activity to stderr.
 Observe IP addresses being immediately added to the IP set, just as they are
 logged by Nginx.
 

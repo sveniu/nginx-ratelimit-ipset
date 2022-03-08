@@ -14,8 +14,8 @@ logger = logging.getLogger()
 
 config_file_paths = (
     "./config.yml",
-    "~/.config/nginx-limitreq-ipset/config.yml",
-    "/etc/nginx-limitreq-ipset/config.yml",
+    "~/.config/nginx-limit-ipset/config.yml",
+    "/etc/nginx-limit-ipset/config.yml",
 )
 
 
