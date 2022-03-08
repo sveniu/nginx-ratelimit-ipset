@@ -22,21 +22,23 @@ Add an iptables rules that drops packets from IPs in the offenders set.
 sudo iptables -A INPUT -m set --match-set offenders src -j DROP
 ```
 
-Configure Nginx with error logging and a simple rate limit.
+Configure Nginx with error logging and two simple rate limits.
 
 ```nginx
+events {}
 http {
-    error_log /var/log/nginx/error.log error;
+ error_log /var/log/nginx/error.log error;
+ limit_req_zone $binary_remote_addr zone=req_zone:10m rate=10r/s;
+ limit_conn_zone $binary_remote_addr zone=conn_zone:10m;
 
-    limit_req_zone $binary_remote_addr zone=myzone:10m rate=1r/s;
-
-    server {
-        location /search/ {
-            limit_req zone=myzone burst=5;
-        }
-        …
+ server {
+    listen 80;
+    location / {
+        limit_req zone=req_zone burst=50 nodelay;
+        limit_conn conn_zone 20;
+        return 200 "Hello, World!";
     }
-    …
+  }
 }
 ```
 
@@ -44,6 +46,7 @@ Put the following configuration into `/etc/nginx-ratelimit-ipset/config.yml`:
 
 ```yaml
 ---
+FIXME: restructure for multiple things from a single file
 zone_ipset_maps:
   - log_file_path: /var/log/nginx/error.log
     ratelimit_zone_name: myzone
