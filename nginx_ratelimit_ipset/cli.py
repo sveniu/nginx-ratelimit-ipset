@@ -61,10 +61,10 @@ def main():
     logger.setLevel(config.get("log_level", logging.INFO))
 
     threads = []
-    for cfg in config["zone_ipset_maps"]:
-        fn = cfg["log_file_path"]
-        q = queue.Queue(config.get("tail_stdout_queue_size", 1000))
-        ipset_manager = ipset.IPSetManager(cfg)
+    for lf in config["nginx_log_files"]:
+        fn = lf["log_file_path"]
+        q = queue.Queue(lf.get("tail_stdout_queue_size", 1000))
+        ipset_manager = ipset.IPSetManager(lf["ipset_maps"])
 
         threads.extend(
             [

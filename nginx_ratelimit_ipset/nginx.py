@@ -32,7 +32,7 @@ def parse_ratelimit_line(s):
     rltype_str = m.group("type")
     if rltype_str == "requests":
         rltype = LimitType.REQUESTS
-    elif rltype_str == "delaying":
+    elif rltype_str == "connections":
         rltype = LimitType.CONNECTIONS
 
     action = None
