@@ -1,6 +1,6 @@
 import logging
 
-from . import exec, nginx
+from .. import exec, nginx
 
 logger = logging.getLogger(__name__)
 

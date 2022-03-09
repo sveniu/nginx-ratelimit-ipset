@@ -8,7 +8,8 @@ from datetime import datetime
 import yaml
 from pythonjsonlogger import jsonlogger
 
-from . import ipset, tail
+from .sinks import ipset
+from .sources import tail
 
 logger = logging.getLogger()
 

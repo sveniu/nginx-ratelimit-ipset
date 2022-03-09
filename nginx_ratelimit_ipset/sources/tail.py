@@ -5,7 +5,7 @@ import threading
 import time
 from enum import Enum
 
-from . import nginx
+from .. import nginx
 
 logger = logging.getLogger(__name__)
 
