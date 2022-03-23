@@ -1,3 +1,4 @@
+import datetime
 import logging
 from ipaddress import ip_network
 
@@ -91,12 +92,20 @@ class LinuxIPSetSink(BasePlugin):
 
         cfgkey = "entry_default_comment"
         if cfgkey in self.config:
-            cmd.extend(
-                [
-                    "comment",
-                    self.config[cfgkey],
-                ]
-            )
+            comment = self.config[cfgkey]
+        else:
+            data = {
+                "added_at": (
+                    datetime.datetime.utcnow()
+                    .replace(tzinfo=datetime.timezone.utc)
+                    .isoformat()
+                )
+            }
+
+            # Format: key1=val1; key2=val2; ...
+            comment = "; ".join([f"{k}={v}" for k, v in data.items()])
+
+        cmd.extend(["comment", comment])
 
         if self.config.get("dry_run", False):
             logger.info(
