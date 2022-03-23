@@ -86,7 +86,7 @@ class NginxRatelimitSource(BasePlugin):
         FIXME make this a utility func
         """
 
-        cmd = ["/usr/bin/tail", "-n", "0", "-F", fn]
+        cmd = ["tail", "-n", "0", "-F", fn]
         p = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
