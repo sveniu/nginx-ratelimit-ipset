@@ -64,7 +64,8 @@ class NginxRatelimitSource(BasePlugin):
 
                     if not self.event_matches_config(rlevent):
                         logger.debug(
-                            "event does not match config", extra={"event": rlevent}
+                            "event does not match config",
+                            extra={"event": rlevent, "config": self.config},
                         )
                         continue
 
