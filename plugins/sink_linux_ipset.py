@@ -1,7 +1,7 @@
 import logging
 from ipaddress import ip_network
 
-from utils import exec
+from utils import execute
 
 from plugins import BasePlugin, PluginType
 
@@ -91,7 +91,7 @@ class LinuxIPSetSink(BasePlugin):
             )
             return
 
-        exec.execute(cmd)
+        execute.simple(cmd)
         logger.info(
             "ipset entry added successfully",
             extra={
@@ -103,4 +103,4 @@ class LinuxIPSetSink(BasePlugin):
 
 # Raise exception early if list command fails.
 # FIXME actually don't. only raise if plugin is actually used
-exec.execute([LinuxIPSetSink.ipset_cmd, "list"])
+execute.simple([LinuxIPSetSink.ipset_cmd, "list"])

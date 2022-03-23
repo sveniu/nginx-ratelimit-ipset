@@ -6,7 +6,7 @@ import time
 from enum import Enum
 from ipaddress import ip_network
 
-from utils import nginx
+from utils import execute, nginx
 
 from plugins import BasePlugin, PluginType
 
@@ -100,14 +100,10 @@ class NginxRatelimitSource(BasePlugin):
         FIXME make this a utility func
         """
 
-        cmd = ["tail", "-n", "0", "-F", fn]
-        p = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        argv = ["tail", "-n", "0", "-F", fn]
+        p = execute.popen(argv)
 
-        logger.info("tail process started", extra={"file_path": fn, "argv": cmd})
+        logger.info("tail process started", extra={"file_path": fn, "argv": argv})
 
         threads = [
             threading.Thread(

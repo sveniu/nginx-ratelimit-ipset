@@ -8,18 +8,22 @@ class NonZeroExitException(Exception):
     pass
 
 
-def execute(cmd, timeout=2.0, encoding="utf-8"):
+def popen(argv):
+    return subprocess.Popen(
+        argv,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+
+def simple(argv, timeout=2.0, encoding="utf-8"):
     try:
-        p = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        p = popen(argv)
     except Exception as e:
         logger.error(
             "error starting subprocess",
             extra={
-                "argv": cmd,
+                "argv": argv,
                 "exception": e,
             },
         )
@@ -35,7 +39,7 @@ def execute(cmd, timeout=2.0, encoding="utf-8"):
         logger.error(
             "subprocess returned non-zero exit code",
             extra={
-                "argv": cmd,
+                "argv": argv,
                 "rc": p.returncode,
                 "stdout": stdout.decode(encoding).strip(),
                 "stderr": stderr.decode(encoding).strip(),
