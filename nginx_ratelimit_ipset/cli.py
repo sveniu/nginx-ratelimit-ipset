@@ -3,11 +3,11 @@ import os.path
 import queue
 import sys
 import threading
-from datetime import datetime
 
 import yaml
 from plugins import plugin_factory
-from pythonjsonlogger import jsonlogger
+
+from .log import CustomJsonFormatter
 
 logger = logging.getLogger()
 
@@ -16,23 +16,6 @@ config_file_paths = (
     "~/.config/nginx-limit-ipset/config.yml",
     "/etc/nginx-limit-ipset/config.yml",
 )
-
-
-class CustomJsonFormatter(jsonlogger.JsonFormatter):
-    """
-    Custom formatter for python-json-logger. Lifted straight from
-    https://github.com/madzak/python-json-logger#customizing-fields
-    """
-
-    def add_fields(self, log_record, record, message_dict):
-        super(CustomJsonFormatter, self).add_fields(log_record, record, message_dict)
-        if not log_record.get("timestamp"):
-            now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-            log_record["timestamp"] = now
-        if log_record.get("level"):
-            log_record["level"] = log_record["level"].upper()
-        else:
-            log_record["level"] = record.levelname
 
 
 def main():
