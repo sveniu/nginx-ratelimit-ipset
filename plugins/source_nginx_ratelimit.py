@@ -24,6 +24,27 @@ class NginxRatelimitSource(BasePlugin):
     def configure(self, config):
         self.config = config
 
+    def event_matches_config(self, rlevent):
+        if (
+            not rlevent["type"]
+            is nginx.LimitType[self.config.get("ratelimit_type", "REQUESTS")]
+        ):
+            return False
+
+        if (
+            not rlevent["action"]
+            is nginx.LimitAction[self.config.get("ratelimit_action", "LIMIT")]
+        ):
+            return False
+
+        if not rlevent["zone"] == self.config["ratelimit_zone_name"]:
+            return False
+
+        if rlevent["dry_run"] and self.config["ratelimit_ignore_if_dry_run"]:
+            return False
+
+        return True
+
     def reader(self, pipe, stream_type, qs=[]):
         """
         Read lines from the given pipe (io.BufferedReader). Handle lines according
@@ -36,10 +57,20 @@ class NginxRatelimitSource(BasePlugin):
 
                 if stream_type is StdStreamType.STDOUT:
                     try:
-                        for q in qs:
-                            q.put(nginx.parse_ratelimit_line(s))
+                        rlevent = nginx.parse_ratelimit_line(s)
                     except nginx.UnhandledEventException as e:
                         logger.debug("unhandled event", extra={"exception": e})
+                        continue
+
+                    if not self.event_matches_config(rlevent):
+                        logger.debug(
+                            "event does not match config", extra={"event": rlevent}
+                        )
+                        continue
+
+                    # Put event into all sink queues.
+                    for q in qs:
+                        q.put(rlevent)
 
                 if stream_type is StdStreamType.STDERR:
                     logger.info("read from stderr", extra={"stderr": s})

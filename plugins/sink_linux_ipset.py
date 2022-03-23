@@ -51,6 +51,16 @@ class LinuxIPSetSink(BasePlugin):
                 ]
             )
 
+        if self.config.get("dry_run", False):
+            logger.info(
+                "dry run; would have added ipset entry",
+                extra={
+                    "item": item,
+                    "argv": cmd,
+                },
+            )
+            return
+
         exec.execute(cmd)
         logger.info(
             "ipset entry added successfully",
