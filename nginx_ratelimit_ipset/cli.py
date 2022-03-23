@@ -3,6 +3,7 @@ import os.path
 import queue
 import sys
 import threading
+import traceback
 
 import yaml
 from plugins import plugin_factory
@@ -102,5 +103,8 @@ def cli():
     try:
         main()
     except Exception as e:
-        logger.error("unhandled exception; exiting", extra={"exception": e})
+        logger.error(
+            "unhandled exception; exiting",
+            extra={"exception": e, "traceback": traceback.format_exc()},
+        )
         sys.exit(1)
