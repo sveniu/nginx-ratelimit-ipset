@@ -1,4 +1,5 @@
 import logging
+from ipaddress import ip_network
 
 from utils import exec
 
@@ -25,6 +26,35 @@ class LinuxIPSetSink(BasePlugin):
                 logger.error("error", extra={"error": e})
 
     def handle_item(self, item):
+        # Parse the item address as an IP address.
+        addr = ip_network(item["addr"], strict=False)
+
+        # Verify IP version match.
+        expected_ip_version = self.config.get("ip_version", 4)
+
+        if not addr.version == expected_ip_version:
+            logger.debug(
+                "ip version mismatch",
+                extra={
+                    "address": addr,
+                    "got_version": addr.version,
+                    "expected_version": expected_ip_version,
+                },
+            )
+            return
+
+        for cidrstr in self.config.get("ignore_cidrs", ["127.0.0.0/8", "::1"]):
+            cidr = ip_network(cidrstr, strict=False)
+            if addr.overlaps(cidr):
+                logger.debug(
+                    "address matches ignored cidr",
+                    extra={
+                        "address": addr,
+                        "matching_ignore_cidr": cidr,
+                    },
+                )
+                return
+
         cmd = [
             LinuxIPSetSink.ipset_cmd,
             "-exist",
