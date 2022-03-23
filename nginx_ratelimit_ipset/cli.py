@@ -11,14 +11,18 @@ from .log import CustomJsonFormatter
 
 logger = logging.getLogger()
 
-config_file_paths = (
+config_file_paths = [
     "./config.yml",
     "~/.config/nginx-limit-ipset/config.yml",
     "/etc/nginx-limit-ipset/config.yml",
-)
+]
 
 
 def main():
+    # If supplied, treat the first argument as the configuration file.
+    if len(sys.argv) > 1:
+        config_file_paths.insert(0, sys.argv[1])
+
     config = None
     for fn in config_file_paths:
         try:
