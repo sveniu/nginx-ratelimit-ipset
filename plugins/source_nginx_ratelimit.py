@@ -4,6 +4,7 @@ import subprocess
 import threading
 import time
 from enum import Enum
+from ipaddress import ip_network
 
 from utils import nginx
 
@@ -42,6 +43,19 @@ class NginxRatelimitSource(BasePlugin):
 
         if rlevent["dry_run"] and self.config["ratelimit_ignore_if_dry_run"]:
             return False
+
+        addr = ip_network(rlevent["addr"], strict=False)
+        for cidrstr in self.config.get("ignore_cidrs", ["127.0.0.0/8", "::1"]):
+            cidr = ip_network(cidrstr, strict=False)
+            if addr.overlaps(cidr):
+                logger.debug(
+                    "address matches ignored cidr",
+                    extra={
+                        "address": addr,
+                        "matching_ignore_cidr": cidr,
+                    },
+                )
+                return False
 
         return True
 
