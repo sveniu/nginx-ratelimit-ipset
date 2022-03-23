@@ -1,7 +1,7 @@
 import logging
 from ipaddress import ip_network
 
-from utils import execute
+from utils import execute, ipset
 
 from plugins import BasePlugin, PluginType
 
@@ -15,6 +15,7 @@ class LinuxIPSetSink(BasePlugin):
 
     def configure(self, config):
         self.config = config
+        self.detect_ipset_ip_version()
 
     def process(self, q):
         for item in iter(q.get, None):
@@ -25,20 +26,36 @@ class LinuxIPSetSink(BasePlugin):
             except Exception as e:
                 logger.error("error", extra={"error": e})
 
+    def detect_ipset_ip_version(self):
+        # Auto-detect the IP set address family.
+        stdout, _ = execute.simple(
+            [
+                LinuxIPSetSink.ipset_cmd,
+                "list",
+                self.config["ipset_name"],
+                "-terse",
+            ]
+        )
+        ipset_list_info = ipset.parse_ipset_list_output(stdout)
+        logger.debug("got ipset info", extra={"ipset": ipset_list_info})
+
+        # Map the IP set family "inet" to 4 and "inet6" to 6.
+        self.ipset_ip_version = {"inet": 4, "inet6": 6}[
+            ipset_list_info["header"]["family"]
+        ]
+
     def handle_item(self, item):
         # Parse the item address as an IP address.
         addr = ip_network(item["addr"], strict=False)
 
         # Verify IP version match.
-        expected_ip_version = self.config.get("ip_version", 4)
-
-        if not addr.version == expected_ip_version:
+        if not addr.version == self.ipset_ip_version:
             logger.debug(
                 "ip version mismatch",
                 extra={
                     "address": addr,
-                    "got_version": addr.version,
-                    "expected_version": expected_ip_version,
+                    "got_ip_version": addr.version,
+                    "ipset_ip_version": self.ipset_ip_version,
                 },
             )
             return

@@ -46,3 +46,5 @@ def simple(argv, timeout=2.0, encoding="utf-8"):
             },
         )
         raise NonZeroExitException(f"return code: {p.returncode}")
+
+    return stdout.decode(encoding).strip(), stderr.decode(encoding).strip()
