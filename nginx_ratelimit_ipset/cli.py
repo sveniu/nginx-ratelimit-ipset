@@ -6,10 +6,8 @@ import threading
 from datetime import datetime
 
 import yaml
+from plugins import plugin_factory
 from pythonjsonlogger import jsonlogger
-
-from .sinks import ipset
-from .sources import tail
 
 logger = logging.getLogger()
 
@@ -42,7 +40,7 @@ def main():
     for fn in config_file_paths:
         try:
             with open(os.path.expanduser(fn), "r") as f:
-                config = yaml.load(f, yaml.SafeLoader)
+                config = yaml.safe_load(f)
                 break
         except FileNotFoundError as e:
             logger.warn("config file not found", extra={"path": fn, "exception": e})
@@ -61,28 +59,49 @@ def main():
     # Update log level from config.
     logger.setLevel(config.get("log_level", logging.INFO))
 
-    threads = []
-    for lf in config["nginx_log_files"]:
-        fn = lf["log_file_path"]
-        q = queue.Queue(lf.get("tail_stdout_queue_size", 1000))
-        ipset_manager = ipset.IPSetManager(lf["ipset_maps"])
+    # Threads running the process() function of each source/sink.
+    process_threads = []
 
-        threads.extend(
-            [
-                threading.Thread(target=ipset_manager.add_to_ipset, args=(q,)),
-                threading.Thread(target=tail.tail_with_retry, args=(fn, q)),
-            ]
+    # List of all queues, for shutdown purposes.
+    all_queues = []
+
+    # Iterate over all sources found in the configuration.
+    for source_spec in config["sources"]:
+        sink_queues = []
+
+        # Iterate over all sinks for this source.
+        for sink_spec in source_spec.get("sinks", []):
+            sink_queue = queue.Queue(1000)  # FIXME configurable?
+
+            # Instantiate the sink plugin and provide the sink configuration.
+            sink = plugin_factory(sink_spec["type"])
+            sink.configure(sink_spec["config"])
+            sink_queues.append(sink_queue)
+            all_queues.append(sink_queue)
+
+            # Prepare the sink's process() thread and provide the sink queue.
+            process_threads.append(
+                threading.Thread(target=sink.process, args=(sink_queue,))
+            )
+
+        # Instantiate the source plugin and provide the source configuration.
+        source = plugin_factory(source_spec["type"])
+        source.configure(source_spec["config"])
+
+        # Prepare the source process() and provide the sink queues.
+        process_threads.append(
+            threading.Thread(target=source.process, args=(sink_queues,))
         )
 
-    # Start all threads.
-    [t.start() for t in threads]
+    # Start all process() threads.
+    [t.start() for t in process_threads]
 
     try:
-        # Wait for all threads to complete.
-        [t.join() for t in threads]
+        # Wait for all process() threads to complete.
+        [t.join() for t in process_threads]
     except KeyboardInterrupt:
-        q.put(None)
-        [t.join(0.2) for t in threads]
+        [q.put(None) for q in all_queues]
+        [t.join(0.2) for t in process_threads]
         raise RuntimeError("keyboard interrupt")
 
 
