@@ -8,7 +8,7 @@ class NonZeroExitException(Exception):
     pass
 
 
-def execute(cmd, timeout=2.0):
+def execute(cmd, timeout=2.0, encoding="utf-8"):
     try:
         p = subprocess.Popen(
             cmd,
@@ -37,8 +37,8 @@ def execute(cmd, timeout=2.0):
             extra={
                 "argv": cmd,
                 "rc": p.returncode,
-                "stdout": stdout.decode("utf-8").strip(),
-                "stderr": stderr.decode("utf-8").strip(),
+                "stdout": stdout.decode(encoding).strip(),
+                "stderr": stderr.decode(encoding).strip(),
             },
         )
         raise NonZeroExitException(f"return code: {p.returncode}")
