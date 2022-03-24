@@ -94,7 +94,7 @@ def main():
 
 
 def cli():
-    logHandler = logging.StreamHandler()
+    logHandler = logging.StreamHandler(sys.stdout)
     formatter = CustomJsonFormatter("%(timestamp)s %(name)s %(level)s %(message)s")
     logHandler.setFormatter(formatter)
     logger.addHandler(logHandler)
