@@ -9,15 +9,15 @@ involved.
 
 ## Overview
 
-Create an IP set of type `hash:ip` with: a one-hour default timeout; forced add
+Create an IP set of type `hash:net` with: a one-hour default timeout; forced add
 with random eviction; counters and comment support.
 
 ```sh
-sudo ipset create offenders hash:ip timeout 3600 forceadd counters comment
+sudo ipset create offenders hash:net timeout 3600 forceadd counters comment
 ```
 
-Add an iptables rules that drops packets originating from IP addresses that can
-be found in the offenders IP set.
+Add an iptables rule that drops packets originating from IP addresses in the
+offenders IP set.
 
 ```sh
 sudo iptables -A INPUT -m set --match-set offenders src -j DROP
