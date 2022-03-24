@@ -6,9 +6,9 @@ import threading
 import traceback
 
 import yaml
-from plugins import plugin_factory
 
 from .log import CustomJsonFormatter
+from .plugins import plugin_factory
 
 logger = logging.getLogger()
 

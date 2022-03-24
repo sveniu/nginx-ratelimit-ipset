@@ -6,9 +6,8 @@ import time
 from enum import Enum
 from ipaddress import ip_network
 
-from utils import execute, nginx, tail
-
-from plugins import BasePlugin, PluginType
+from nginx_ratelimit_ipset.plugins import BasePlugin, PluginType
+from nginx_ratelimit_ipset.utils import nginx, tail
 
 logger = logging.getLogger(__name__)
 

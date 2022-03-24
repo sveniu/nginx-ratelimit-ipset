@@ -2,9 +2,8 @@ import datetime
 import logging
 from ipaddress import ip_network
 
-from utils import execute, ipset
-
-from plugins import BasePlugin, PluginType
+from nginx_ratelimit_ipset.plugins import BasePlugin, PluginType
+from nginx_ratelimit_ipset.utils import execute, ipset
 
 logger = logging.getLogger(__name__)
 
