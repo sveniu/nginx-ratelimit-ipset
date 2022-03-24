@@ -21,6 +21,4 @@ Send metrics to statsd?
 
 Encode more info into the ipset entry's comment field.
 
-Require only python 3.8? 3.7? Ubuntu Bionic has 3.6.9.
-
 De-duplicate ipset inserts with some sort of cache.
