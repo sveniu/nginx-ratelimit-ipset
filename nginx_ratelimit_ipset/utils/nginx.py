@@ -42,11 +42,10 @@ def parse_ratelimit_line(s):
     elif action_str == "delaying":
         action = LimitAction.DELAY
 
+    excess = None
     m = re.match(r".*\bexcess: (?P<excess>[\d.]+)", s)
-    if not m:
-        raise UnhandledEventException("excess not parsed")
-
-    excess = m.group("excess")
+    if m:
+        excess = m.group("excess")
 
     m = re.match(r'.*\bzone "(?P<zone>[^"]+)"', s)
     if not m:
