@@ -1,0 +1,84 @@
+---
+# Global log level (default: INFO)
+log_level: DEBUG
+
+# List of sources that produce events.
+sources:
+  - # The source type; matches a plugin's name (`plugin_name` in the plugin
+    # class).
+    type: NGINX_RATELIMIT
+
+    # This source's configuration.
+    config:
+      # Path to the Nginx error log (no default)
+      #
+      # Absolute or relative path to the Nginx error log.
+      error_log_file_path: /var/log/nginx/error.log
+
+      # Rate limit zone name (no default)
+      #
+      # Name of the shared memory zone, corresponding to the Nginx limit_req or
+      # limit_conn zone name.
+      ratelimit_zone_name: req_zone
+
+      # Rate limit type (default: REQUESTS)
+      #
+      # This can either be REQUESTS (Nginx ngx_http_limit_req_module) or
+      # CONNECTIONS (Nginx ngx_http_limit_conn_module).
+      ratelimit_type: REQUESTS
+
+      # Rate limit action (default: LIMIT)
+      #
+      # This can either be LIMIT or DELAY, corresponding to Nginx limiting or
+      # delaying events.
+      ratelimit_action: LIMIT
+
+      # Ignore dry-run events (default: true)
+      #
+      # Control whether to ignore events that are marked as dry run by the Nginx
+      # limit_{req,conn}_dry_run directives.
+      ratelimit_ignore_if_dry_run: true
+
+      # List of addresses/CIDRs to ignore (default: 127.0.0.0/8, ::1).
+      #
+      # If an event's address or CIDR is partly or wholly contained within any
+      # of the listed CIDRs, the event is ignored and will not be propagated to
+      # sinks. Values can be bare IPv4/IPv6 addresses, or IPv4/IPv6 CIDRs.
+      ignore_cidrs:
+        - 127.0.0.0/8
+        - ::1
+
+    # List of sinks that consume events from the source.
+    sinks:
+      - # The sink type; matches a plugin's name (`plugin_name` in the plugin
+        # class).
+        type: LINUX_IPSET
+
+        # This sink's configuration.
+        config:
+          # Name of the IP set to add entries to (no default)
+          ipset_name: set1
+
+          # Enable dry run mode (default: false)
+          #
+          # If enabled, entries are logged; no entries are added to the IP set.
+          dry_run: false
+
+          # Default timout for entries (default: 3600 seconds)
+          entry_default_timeout_seconds: 3600
+
+          # Default comment for entries (default: dynamic)
+          #
+          # Set a static comment for entries inserted into the IP set. By
+          # default, the comment contains an "added_at" timestamp.
+          #entry_default_comment: some comment
+
+          # List of addresses/CIDRs to ignore (default: 127.0.0.0/8, ::1).
+          #
+          # If an event's address or CIDR is partly or wholly contained within
+          # any of the listed CIDRs, the event is ignored and will not be
+          # handled by this sink. Values can be bare IPv4/IPv6 addresses, or
+          # IPv4/IPv6 CIDRs.
+          ignore_cidrs:
+            - 127.0.0.0/8
+            - ::1
