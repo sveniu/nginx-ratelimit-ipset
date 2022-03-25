@@ -31,7 +31,7 @@ def main():
                 config = yaml.safe_load(f)
                 break
         except FileNotFoundError as e:
-            logger.warn("config file not found", extra={"path": fn, "exception": e})
+            logger.debug("config file not found", extra={"path": fn, "exception": e})
 
     if config is None:
         logger.error(
