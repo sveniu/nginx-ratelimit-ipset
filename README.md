@@ -170,6 +170,13 @@ partly or wholly contained within any of the listed CIDRs, the event is ignored
 and will not be propagated to sinks. Values can be bare IPv4/IPv6 addresses, or
 IPv4/IPv6 CIDRs.
 
+`cache_size` (default: 10000): The number of addresses that can be cached, for
+de-duplication purposes. When full, items are discarded in LRU order. A value of
+0 disables caching.
+
+`cache_ttl_seconds` (default: 60.0): The number of seconds to keep addresses in
+the cache before they expire.
+
 Compatibility: Works with any Nginx version starting with 0.7.25 (ca 2008),
 which added logging of the limit_req zone name.
 
@@ -203,3 +210,10 @@ timestamp.
 partly or wholly contained within any of the listed CIDRs, the event is ignored
 and will not be propagated to sinks. Values can be bare IPv4/IPv6 addresses, or
 IPv4/IPv6 CIDRs.
+
+`cache_size` (default: 10000): The number of addresses that can be cached, for
+de-duplication purposes. When full, items are discarded in LRU order. A value of
+0 disables caching.
+
+`cache_ttl_seconds` (default: 60.0): The number of seconds to keep addresses in
+the cache before they expire.

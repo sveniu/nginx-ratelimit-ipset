@@ -48,6 +48,19 @@ sources:
         - 127.0.0.0/8
         - ::1
 
+      # Address de-duplication cache size (default: 10000)
+      #
+      # The number of addresses that can be cached, for de-duplication purposes.
+      # When full, items are discarded in LRU order.
+      #
+      # A value of 0 disables caching.
+      cache_size: 10000
+
+      # Address de-duplication cache time-to-live in seconds (default: 60.0)
+      #
+      # The number of seconds to keep addresses in the cache before they expire.
+      cache_ttl_seconds: 60.0
+
     # List of sinks that consume events from the source.
     sinks:
       - # The sink type; matches a plugin's name (`plugin_name` in the plugin
@@ -82,3 +95,17 @@ sources:
           ignore_cidrs:
             - 127.0.0.0/8
             - ::1
+
+          # Address de-duplication cache size (default: 10000)
+          #
+          # The number of addresses that can be cached, for de-duplication
+          # purposes. When full, items are discarded in LRU order.
+          #
+          # A value of 0 disables caching.
+          cache_size: 10000
+
+          # Address de-duplication cache time-to-live in seconds (default: 60.0)
+          #
+          # The number of seconds to keep addresses in the cache before they
+          # expire.
+          cache_ttl_seconds: 60.0

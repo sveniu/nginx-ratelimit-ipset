@@ -6,8 +6,9 @@ import time
 from enum import Enum
 from ipaddress import ip_network
 
+import cachetools
 from nginx_ratelimit_ipset.plugins import BasePlugin, PluginType
-from nginx_ratelimit_ipset.utils import nginx, tail
+from nginx_ratelimit_ipset.utils import nginx, tail, types
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,15 @@ class NginxRatelimitSource(BasePlugin):
 
     def configure(self, config):
         self.config = config
+
+        cache_size = self.config.get("cache_size", 10_000)
+        if cache_size > 0:
+            self.cache = cachetools.TTLCache(
+                self.config.get("cache_size", 10_000),
+                self.config.get("cache_ttl_seconds", 60.0),
+            )
+        else:
+            self.cache = types.nulldict()
 
     def event_matches_config(self, rlevent):
         if (
@@ -75,9 +85,16 @@ class NginxRatelimitSource(BasePlugin):
                 )
                 continue
 
-            # Put event into all sink queues.
-            for q in qs:
-                q.put(rlevent)
+            if rlevent["addr"] not in self.cache:
+                # Put event into all sink queues.
+                for q in qs:
+                    q.put(rlevent)
+                self.cache[rlevent["addr"]] = rlevent
+            else:
+                logger.debug(
+                    "event found in cache; ignoring",
+                    extra={"event": rlevent},
+                )
 
     def qstderr_handler(self, q):
         for line in iter(q.get, None):

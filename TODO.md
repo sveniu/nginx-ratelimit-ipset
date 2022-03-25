@@ -21,4 +21,7 @@ Send metrics to statsd?
 
 Encode more info into the ipset entry's comment field.
 
-De-duplicate ipset inserts with some sort of cache.
+Establish what an "item" (aka event) is, data structure wise. Currently it's
+decided by utils.nginx:parse_ratelimit_line. This also plays into how the
+de-duplication caching would work, as that one only looks at the addr field, for
+the time being.

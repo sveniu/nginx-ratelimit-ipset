@@ -2,8 +2,9 @@ import datetime
 import logging
 from ipaddress import ip_network
 
+import cachetools
 from nginx_ratelimit_ipset.plugins import BasePlugin, PluginType
-from nginx_ratelimit_ipset.utils import execute, ipset
+from nginx_ratelimit_ipset.utils import execute, ipset, types
 
 logger = logging.getLogger(__name__)
 
@@ -16,13 +17,29 @@ class LinuxIPSetSink(BasePlugin):
     def configure(self, config):
         self.config = config
         self.detect_ipset_ip_version()
+        cache_size = self.config.get("cache_size", 10_000)
+        if cache_size > 0:
+            self.cache = cachetools.TTLCache(
+                self.config.get("cache_size", 10_000),
+                self.config.get("cache_ttl_seconds", 60.0),
+            )
+        else:
+            self.cache = types.nulldict()
 
     def process(self, q):
         for item in iter(q.get, None):
             logger.debug("got item", extra={"item": item})
 
+            if item["addr"] in self.cache:
+                logger.debug(
+                    "item found in cache; ignoring",
+                    extra={"item": item},
+                )
+                continue
+
             try:
                 self.handle_item(item)
+                self.cache[item["addr"]] = item
             except Exception as e:
                 logger.error("error", extra={"error": e})
 
