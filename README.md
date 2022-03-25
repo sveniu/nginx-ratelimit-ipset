@@ -20,7 +20,7 @@ Add an iptables rule that drops packets originating from IP addresses in the
 offenders IP set.
 
 ```sh
-sudo iptables -A INPUT -m set --match-set offenders src -j DROP
+sudo iptables -A INPUT -p tcp --dport 80 -m set --match-set offenders src -j DROP
 ```
 
 Configure Nginx with error logging and two simple rate limits.
@@ -34,10 +34,11 @@ http {
 
  server {
     listen 80;
+    root /var/www/html;
     location / {
         limit_req zone=req_zone burst=50 nodelay;
         limit_conn conn_zone 20;
-        return 200 "Hello, World!";
+        try_files $uri $uri/ =404;
     }
   }
 }
